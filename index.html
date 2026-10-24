@@ -46,9 +46,12 @@ input,textarea{width:100%;padding:9px;border-radius:10px;border:1px solid var(--
 </form>
 <p class="empty" id="msg" style="display:none"></p>
 <script>
-(function(){
+(async function(){
 const tg = window.Telegram && Telegram.WebApp; if (tg) { tg.ready(); tg.expand(); }
-const CATS=['집','건강','쇼핑','약속','기타'], PRIOS=['보통','중요'];
+// 그룹에서 직접 링크로 열 때 쓰는 중계소 주소(맥미니가 목록을 올려 두고, 저장한 내용을 가져감)
+const RELAY = '__RELAY_URL__';
+const BOT = (new URLSearchParams(location.search).get('bot') || 'personal').replace(/[^a-z]/g,'');
+let CATS=['집','건강','쇼핑','약속','기타']; const PRIOS=['보통','중요'];
 function readData(){
   const h = window.__RAW_HASH.replace(/^#/, '');
   for (const part of h.split(/[&?]/)) { if (part.startsWith('d=')) {
@@ -57,9 +60,23 @@ function readData(){
     return JSON.parse(new TextDecoder().decode(bytes)); } }
   return null;
 }
-let data; try { data = readData(); } catch(e) { data = null; }
 const $ = id => document.getElementById(id);
-if (!data || data.v !== 1) { $('msg').style.display='block'; $('msg').textContent='리나 봇 1:1 대화에서 "할 일 앱"이라고 보내 열어 주세요.'; $('add').style.display='none'; document.querySelector('.tabs').style.display='none'; return; }
+function stop(text){ $('msg').style.display='block'; $('msg').textContent=text; $('add').style.display='none'; document.querySelector('.tabs').style.display='none'; }
+let data, mode='send'; try { data = readData(); } catch(e) { data = null; }
+if (!data && tg && tg.initData && RELAY.startsWith('https://')) {
+  mode='cloud'; stop('불러오는 중…');
+  try {
+    const r = await fetch(RELAY+'/api/snap?bot='+BOT, {headers:{'x-init-data': tg.initData}, cache:'no-store'});
+    if (r.status===403) { stop('오빠 계정에서만 열 수 있어요.'); return; }
+    const j = await r.json();
+    data = j.blob ? JSON.parse(j.blob) : null;
+  } catch(e) { data = null; }
+  if (!data) { stop('목록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'); return; }
+  $('msg').style.display='none'; $('add').style.display=''; document.querySelector('.tabs').style.display='';
+}
+if (!data || data.v !== 1) { stop('봇 1:1 대화에서 "할 일 앱"이라고 보내 열어 주세요.'); return; }
+if (Array.isArray(data.cats) && data.cats.length) CATS = data.cats;
+if (data.title) { document.title = data.title; const h=document.querySelector('h1'); if (h) h.textContent = '📋 ' + data.title; }
 $('asof').textContent = '기준: ' + data.at.replace('T',' ').slice(0,16);
 const items = data.items.map(x => Object.assign({}, x));
 const ops = new Map(); let tab='open', editing=null, tmpN=0;
@@ -123,9 +140,16 @@ function updateMain(){
   if(!tg) return; const n=ops.size;
   if(n){ tg.MainButton.setText('저장 ('+n+'건)'); tg.MainButton.show(); } else tg.MainButton.hide();
 }
-if (tg) tg.MainButton.onClick(()=>{
+let sending=false;
+if (tg) tg.MainButton.onClick(async ()=>{
   const p = payload(); if (new TextEncoder().encode(p).length > 4000) { tg.showAlert('한 번에 바꾼 내용이 너무 많아요. 나눠서 저장해 주세요.'); return; }
-  tg.sendData(p);
+  if (mode==='send') { tg.sendData(p); return; }
+  if (sending) return; sending=true; tg.MainButton.showProgress();
+  try {
+    const r = await fetch(RELAY+'/api/submit?bot='+BOT, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({init: tg.initData, blob: p})});
+    if (!r.ok) throw new Error(r.status);
+    tg.MainButton.hideProgress(); tg.showAlert('저장했어요. 15초 안에 반영되고 방에 결과를 알려 드려요.', ()=>tg.close());
+  } catch(e) { sending=false; tg.MainButton.hideProgress(); tg.showAlert('저장하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.'); }
 });
 $('tOpen').onclick=()=>{tab='open';$('tOpen').classList.add('on');$('tDone').classList.remove('on');render();};
 $('tDone').onclick=()=>{tab='done';$('tDone').classList.add('on');$('tOpen').classList.remove('on');render();};
