@@ -49,7 +49,7 @@ input,textarea{width:100%;padding:9px;border-radius:10px;border:1px solid var(--
 (async function(){
 const tg = window.Telegram && Telegram.WebApp; if (tg) { tg.ready(); tg.expand(); }
 // 그룹에서 직접 링크로 열 때 쓰는 중계소 주소(맥미니가 목록을 올려 두고, 저장한 내용을 가져감)
-const RELAY = '__RELAY_URL__';
+const RELAY = 'https://ghk-todo.shoutttsky.workers.dev';
 const BOT = (new URLSearchParams(location.search).get('bot') || 'personal').replace(/[^a-z]/g,'');
 let CATS=['집','건강','쇼핑','약속','기타']; const PRIOS=['보통','중요'];
 function readData(){
