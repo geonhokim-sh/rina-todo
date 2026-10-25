@@ -4,64 +4,132 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="referrer" content="no-referrer">
-<title>리나 할 일</title>
+<title>할 일</title>
 <script>
 // 할 일 목록은 주소의 # 뒤에만 있습니다(서버로 전송되지 않음). 텔레그램 스크립트보다 먼저 읽어 둡니다.
 window.__RAW_HASH = location.hash || '';
 </script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:var(--tg-theme-bg-color,#fff);--tx:var(--tg-theme-text-color,#222);--hint:var(--tg-theme-hint-color,#888);--btn:var(--tg-theme-button-color,#2a8bf2);--btx:var(--tg-theme-button-text-color,#fff);--sec:var(--tg-theme-secondary-bg-color,#f2f2f5)}
-*{box-sizing:border-box}body{margin:0;font:16px/1.4 -apple-system,system-ui,sans-serif;background:var(--bg);color:var(--tx)}
-header{padding:12px 14px 4px}h1{font-size:19px;margin:0}small{color:var(--hint)}
-.tabs{display:flex;gap:6px;padding:8px 14px}.tabs button{flex:1}
-button{border:0;border-radius:10px;padding:9px 10px;font-size:15px;background:var(--sec);color:var(--tx)}
-button.on,button.pri{background:var(--btn);color:var(--btx)}
-ul{list-style:none;margin:0;padding:0 10px}li{background:var(--sec);border-radius:12px;margin:6px 0;padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
-li .chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--btn);flex:none;margin-top:1px;padding:0;background:transparent}
-li.done .chk{background:var(--btn)}li.done .t{text-decoration:line-through;color:var(--hint)}
-li .body{flex:1}li .meta{color:var(--hint);font-size:13px}li.changed{outline:2px dashed var(--btn)}
-.empty{color:var(--hint);text-align:center;padding:30px}
-form{padding:10px 14px;display:none}form.show{display:block}label{display:block;margin:8px 0 3px;font-size:14px;color:var(--hint)}
-input,textarea{width:100%;padding:9px;border-radius:10px;border:1px solid var(--sec);background:var(--sec);color:var(--tx);font-size:16px}
-.row{display:flex;gap:6px;flex-wrap:wrap}.row button{flex:1;min-width:60px}
-.foot{display:flex;gap:6px;padding:12px 14px}
-#add{margin:8px 14px;width:calc(100% - 28px)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:15px/1.4 -apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;min-height:100vh;padding-bottom:96px}
+button{font:inherit;border:0;cursor:pointer;background:none;color:inherit}
+.hide{display:none!important}
+.empty{text-align:center;padding:36px 10px;opacity:.6}
+#msg{text-align:center;padding:60px 20px;opacity:.7}
+.chip{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap}
+.who{font-size:11px;padding:2px 7px;border-radius:10px;font-weight:700;white-space:nowrap}
+.who.to{background:#fff1d6;color:#a15c00}.who.from{background:#e2f0ff;color:#1b5fae}
+.late{color:#e5484d;font-weight:700}
+
+/* ===== A: 리나 카드형 ===== */
+body.A{background:#f6f4fb;color:#1d1b26}
+.A header{padding:20px 16px 4px}.A h1{font-size:24px;font-weight:800}
+.A .sub{font-size:13px;color:#7a7590;margin-top:4px}
+.A .tabs{display:flex;gap:6px;padding:12px 16px 4px;overflow-x:auto}
+.A .tab{padding:7px 13px;border-radius:20px;background:#fff;font-size:13px;color:#555;white-space:nowrap}
+.A .tab.on{background:#7c5cff;color:#fff;font-weight:700}
+.A #list{padding:0 16px}
+.A .sec{font-size:13px;font-weight:700;color:#7a7590;margin:14px 4px 8px}
+.A .item{background:#fff;border-radius:16px;padding:13px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:center;box-shadow:0 2px 6px rgba(80,60,160,.06)}
+.A .ck{width:24px;height:24px;border-radius:50%;border:2px solid #c9c2e8;flex:none}
+.A .done .ck{background:#7c5cff;border-color:#7c5cff}
+.A .body{flex:1;min-width:0}.A .t{font-size:15px;font-weight:600}
+.A .m{font-size:12px;color:#8a85a0;margin-top:4px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.A .done .t{text-decoration:line-through;color:#aaa}
+.A .changed{outline:2px dashed #7c5cff}
+.A .bar{display:none}
+.A #add{position:fixed;right:20px;bottom:24px;width:58px;height:58px;border-radius:50%;background:#7c5cff;color:#fff;font-size:32px;box-shadow:0 6px 16px rgba(124,92,255,.45)}
+.A #add span{display:none}
+.A form,.A .fbox{background:#f6f4fb}
+.A .pri,.A .opt.on{background:#7c5cff;color:#fff}
+
+/* ===== B: 지휘 업무 목록형 ===== */
+body.B{background:#fff;color:#111}
+.B header{background:#1f3a5f;color:#fff;padding:18px 16px 14px}
+.B h1{font-size:20px;font-weight:800}.B .sub{font-size:12px;opacity:.75;margin-top:2px}
+.B .stats{display:flex;gap:8px;margin-top:12px}
+.B .st{flex:1;background:rgba(255,255,255,.12);border-radius:10px;padding:8px 2px;text-align:center}
+.B .st b{display:block;font-size:20px}.B .st span{font-size:11px;opacity:.8}
+.B .st.red b{color:#ff8a8a}
+.B .tabs{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid #eee;overflow-x:auto;position:sticky;top:0;background:#fff;z-index:2}
+.B .tab{font-size:12px;padding:5px 10px;border:1px solid #d5dbe3;border-radius:6px;color:#445;white-space:nowrap}
+.B .tab.on{background:#1f3a5f;color:#fff;border-color:#1f3a5f}
+.B .sec{font-size:11px;font-weight:800;color:#1f3a5f;background:#f3f6fa;padding:6px 16px;letter-spacing:.5px}
+.B .item{display:flex;align-items:center;gap:10px;padding:11px 16px 11px 12px;border-bottom:1px solid #f0f0f0}
+.B .bar{width:4px;align-self:stretch;border-radius:2px;flex:none}
+.B .ck{width:20px;height:20px;border:2px solid #b8c2cf;border-radius:5px;flex:none}
+.B .done .ck{background:#1f3a5f;border-color:#1f3a5f}
+.B .body{flex:1;min-width:0}.B .t{font-size:14px;font-weight:600}
+.B .m{font-size:12px;color:#667;margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.B .done .t{text-decoration:line-through;color:#999}
+.B .changed{background:#fffbe6}
+.B .d{font-size:12px;color:#667;white-space:nowrap}.B .d.late{color:#e5484d}.tabs::-webkit-scrollbar{display:none}.tabs{scrollbar-width:none}
+.B .pri{font-size:10px;color:#d93025;border:1px solid #d93025;border-radius:4px;padding:0 4px;margin-left:5px;vertical-align:2px}
+.B #add{position:fixed;left:12px;right:12px;bottom:14px;background:#1f3a5f;color:#fff;border-radius:12px;padding:14px;font-weight:700;font-size:15px}
+.B #add b{display:none}
+.B .opt.on,.B .okbtn{background:#1f3a5f;color:#fff}
+
+/* ===== 입력 화면(공통) ===== */
+form{display:none;padding:16px}form.show{display:block}
+form h2{font-size:18px;margin-bottom:6px}
+form label{display:block;margin:12px 0 5px;font-size:13px;opacity:.65;font-weight:600}
+form input,form textarea{width:100%;padding:11px;border-radius:10px;border:1px solid #dcdce4;background:#fff;color:#111;font:inherit;font-size:16px}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.opt{flex:1;min-width:58px;padding:9px 6px;border-radius:10px;background:#ececf2;font-size:14px}
+.foot{display:flex;gap:6px;margin-top:18px}.foot button{flex:1;padding:12px;border-radius:10px;background:#ececf2;font-weight:600}
+.foot .okbtn{background:#7c5cff;color:#fff}
+.B .foot .okbtn{background:#1f3a5f}
+#fDel{color:#e5484d}
 </style>
 </head>
-<body>
-<header><h1>📋 리나 할 일</h1><small id="asof"></small></header>
-<div class="tabs"><button id="tOpen" class="on">해야 할 일</button><button id="tDone">완료(7일)</button></div>
-<button id="add" class="pri">＋ 할 일 추가</button>
-<ul id="list"></ul>
+<body class="A">
+<header><h1 id="title">할 일</h1><div class="sub" id="sub"></div><div class="stats hide" id="stats"></div></header>
+<div class="tabs" id="tabs"></div>
+<div id="list"></div>
+<p id="msg" class="hide"></p>
+<button id="add"><b>+</b><span>+ 할 일 추가</span></button>
 <form id="f">
+  <h2 id="fHead">할 일 추가</h2>
   <label>할 일</label><input id="fTitle" maxlength="300">
-  <label>언제까지</label><div class="row"><button type="button" data-d="0">오늘</button><button type="button" data-d="1">내일</button><button type="button" data-d="">없음</button></div>
+  <label>언제까지</label><div class="row"><button type="button" class="opt" data-d="0">오늘</button><button type="button" class="opt" data-d="1">내일</button><button type="button" class="opt" data-d="7">일주일</button><button type="button" class="opt" data-d="">없음</button></div>
   <input id="fDue" type="date" style="margin-top:6px">
   <label>알림 (비우면 없음)</label><input id="fRem" type="datetime-local">
   <label>분류</label><div class="row" id="fCat"></div>
   <label>중요도</label><div class="row" id="fPrio"></div>
+  <div id="assignBox" class="hide">
+    <label>위임</label><div class="row" id="fDir"></div>
+    <input id="fWho" maxlength="60" placeholder="사람 이름" style="margin-top:6px">
+  </div>
   <label>메모</label><textarea id="fMemo" rows="2" maxlength="1000"></textarea>
-  <div class="foot"><button type="button" id="fCancel">닫기</button><button type="button" id="fDel">삭제</button><button type="button" id="fOk" class="pri">확인</button></div>
+  <div class="foot"><button type="button" id="fCancel">닫기</button><button type="button" id="fDel">삭제</button><button type="button" id="fOk" class="okbtn">확인</button></div>
 </form>
-<p class="empty" id="msg" style="display:none"></p>
 <script>
 (async function(){
-const tg = window.Telegram && Telegram.WebApp; if (tg) { tg.ready(); tg.expand(); }
+const tg = window.Telegram && Telegram.WebApp && Telegram.WebApp.initData !== undefined ? Telegram.WebApp : null;
+if (tg) { tg.ready(); tg.expand(); }
 // 그룹에서 직접 링크로 열 때 쓰는 중계소 주소(맥미니가 목록을 올려 두고, 저장한 내용을 가져감)
 const RELAY = 'https://ghk-todo.shoutttsky.workers.dev';
 const BOT = (new URLSearchParams(location.search).get('bot') || 'personal').replace(/[^a-z]/g,'');
-let CATS=['집','건강','쇼핑','약속','기타']; const PRIOS=['보통','중요'];
+const WORK = BOT === 'work';
+document.body.className = WORK ? 'B' : 'A';
+if (tg && tg.setHeaderColor) { try { tg.setHeaderColor(WORK ? '#1f3a5f' : '#f6f4fb'); tg.setBackgroundColor(WORK ? '#ffffff' : '#f6f4fb'); } catch(e){} }
+let CATS = WORK ? ['인허가','계약','서류','회의','기타'] : ['집','건강','쇼핑','약속','기타'];
+const PRIOS=['보통','중요'];
+const DIRS=[['','없음'],['to','내가 지시함'],['from','지시받음']];
+const PAL=['#e5484d','#2f80ed','#f2994a','#9b51e0','#27ae60','#8a8f98'];
+const SOFT=[['#ffe8d6','#c2560c'],['#dcf5e7','#18794e'],['#e3ecff','#2f5bd3'],['#f3e3ff','#8a3fc7'],['#eceef2','#5b6170']];
+const $ = id => document.getElementById(id);
 function readData(){
   const h = window.__RAW_HASH.replace(/^#/, '');
   for (const part of h.split(/[&?]/)) { if (part.startsWith('d=')) {
     let s = part.slice(2).replace(/-/g,'+').replace(/_/g,'/'); while (s.length % 4) s += '=';
-    const bin = atob(s); const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    const bytes = Uint8Array.from(atob(s), c => c.charCodeAt(0));
     return JSON.parse(new TextDecoder().decode(bytes)); } }
   return null;
 }
-const $ = id => document.getElementById(id);
-function stop(text){ $('msg').style.display='block'; $('msg').textContent=text; $('add').style.display='none'; document.querySelector('.tabs').style.display='none'; }
+function stop(text){ $('msg').classList.remove('hide'); $('msg').textContent=text; ['add','tabs','list'].forEach(i=>$(i).classList.add('hide')); }
+function unstop(){ $('msg').classList.add('hide'); ['add','tabs','list'].forEach(i=>$(i).classList.remove('hide')); }
 let data, mode='send'; try { data = readData(); } catch(e) { data = null; }
 if (!data && tg && tg.initData && RELAY.startsWith('https://')) {
   mode='cloud'; stop('불러오는 중…');
@@ -72,35 +140,87 @@ if (!data && tg && tg.initData && RELAY.startsWith('https://')) {
     data = j.blob ? JSON.parse(j.blob) : null;
   } catch(e) { data = null; }
   if (!data) { stop('목록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'); return; }
-  $('msg').style.display='none'; $('add').style.display=''; document.querySelector('.tabs').style.display='';
+  unstop();
 }
 if (!data || data.v !== 1) { stop('봇 1:1 대화에서 "할 일 앱"이라고 보내 열어 주세요.'); return; }
 if (Array.isArray(data.cats) && data.cats.length) CATS = data.cats;
-if (data.title) { document.title = data.title; const h=document.querySelector('h1'); if (h) h.textContent = '📋 ' + data.title; }
-$('asof').textContent = '기준: ' + data.at.replace('T',' ').slice(0,16);
+const TITLE = data.title || (WORK ? '지휘 업무 할 일' : '리나 할 일');
+document.title = TITLE; $('title').textContent = TITLE;
 const items = data.items.map(x => Object.assign({}, x));
-const ops = new Map(); let tab='open', editing=null, tmpN=0;
-function kst(d){ const t=new Date(Date.now()+9*3600e3+d*864e5); return t.toISOString().slice(0,10); }
-function chips(box, arr){ box.innerHTML=''; arr.forEach(v=>{const b=document.createElement('button');b.type='button';b.textContent=v;b.onclick=()=>{[...box.children].forEach(c=>c.classList.remove('on'));b.classList.add('on');};box.appendChild(b);}); }
-function pick(box){ const b=[...box.children].find(c=>c.classList.contains('on')); return b?b.textContent:null; }
-function setPick(box,v){ [...box.children].forEach(c=>c.classList.toggle('on',c.textContent===v)); }
-chips($('fCat'),CATS); chips($('fPrio'),PRIOS);
+const ops = new Map(); let tab = WORK ? 'all' : 'today', editing=null, tmpN=0;
+function kst(d){ return new Date(Date.now()+9*3600e3+d*864e5).toISOString().slice(0,10); }
+const TODAY = kst(0), WEEK = kst(6);
+function grp(x){ if(x.s==='done') return 'done'; if(!x.d) return 'later'; if(x.d<TODAY) return 'over'; if(x.d===TODAY) return 'today'; if(x.d<=WEEK) return 'week'; return 'later'; }
+const GN={over:'⚠️ 기한 지남',today:'오늘',week:'이번 주',later:'나중',done:'완료(7일)'};
+function catIdx(c){ const i=CATS.indexOf(c); return i<0?CATS.length-1:i; }
+function fmtD(d){ if(!d) return ''; if(d===TODAY) return '오늘'; if(d===kst(1)) return '내일'; return +d.slice(5,7)+'/'+ +d.slice(8,10); }
+function whoTag(x){ if(!x.w||!x.a) return null; const s=document.createElement('span'); s.className='who '+x.a; s.textContent = x.a==='to' ? '→ '+x.w+'에게 지시' : '← '+x.w+' 지시'; return s; }
+
+function opts(box, arr){ box.innerHTML=''; arr.forEach(([v,l])=>{const b=document.createElement('button');b.type='button';b.className='opt';b.dataset.v=v;b.textContent=l;b.onclick=()=>{[...box.children].forEach(c=>c.classList.remove('on'));b.classList.add('on'); if(box.id==='fDir') $('fWho').classList.toggle('hide', !v);};box.appendChild(b);}); }
+function pick(box){ const b=[...box.children].find(c=>c.classList.contains('on')); return b?b.dataset.v:null; }
+function setPick(box,v){ [...box.children].forEach(c=>c.classList.toggle('on',c.dataset.v===v)); }
+opts($('fCat'),CATS.map(c=>[c,c])); opts($('fPrio'),PRIOS.map(c=>[c,c])); opts($('fDir'),DIRS);
+if (WORK) $('assignBox').classList.remove('hide');
 document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ $('fDue').value = b.dataset.d===''?'':kst(+b.dataset.d); });
+
+function tabsDef(){
+  const open = items.filter(x=>x.s==='open');
+  if (!WORK) {
+    const n = g => open.filter(x=>grp(x)===g).length;
+    return [['today','오늘 '+(n('today')+n('over'))],['week','이번 주 '+n('week')],['later','나중 '+n('later')],['done','완료']];
+  }
+  return [['all','전체']].concat(CATS.map(c=>['c:'+c,c]), [['to','내가 지시함'],['from','지시받음'],['done','완료']]);
+}
+function renderTabs(){
+  const box=$('tabs'); box.innerHTML='';
+  tabsDef().forEach(([k,l])=>{ const b=document.createElement('button'); b.className='tab'+(k===tab?' on':''); b.textContent=l; b.onclick=()=>{tab=k;render();}; box.appendChild(b); });
+}
+function renderHead(){
+  const open = items.filter(x=>x.s==='open');
+  const dn = ['일','월','화','수','목','금','토'][new Date(Date.now()+9*3600e3).getUTCDay()];
+  if (!WORK) { $('sub').textContent = (+TODAY.slice(5,7))+'월 '+(+TODAY.slice(8))+'일 '+dn+'요일 · 남은 일 '+open.length+'개'; return; }
+  $('sub').textContent = '기준 '+data.at.replace('T',' ').slice(5,16);
+  const c = g => open.filter(x=>grp(x)===g).length;
+  const st=$('stats'); st.classList.remove('hide');
+  st.innerHTML='';
+  [['기한 지남',c('over'),'red'],['오늘',c('today'),''],['이번 주',c('week'),''],['지시함',open.filter(x=>x.a==='to'&&x.w).length,''],['전체',open.length,'']].forEach(([l,n,k])=>{
+    const d=document.createElement('div'); d.className='st '+k; d.innerHTML='<b></b><span></span>'; d.firstChild.textContent=n; d.lastChild.textContent=l; st.appendChild(d); });
+}
+function row(x){
+  const li=document.createElement('div'); li.className='item'+(x.s==='done'?' done':'')+(ops.has(x.i)?' changed':'');
+  const bar=document.createElement('div'); bar.className='bar'; bar.style.background = grp(x)==='over' ? PAL[0] : PAL[1+catIdx(x.c)%5];
+  const c=document.createElement('button'); c.className='ck'; c.setAttribute('aria-label','완료'); c.onclick=()=>toggle(x);
+  const body=document.createElement('div'); body.className='body';
+  const t=document.createElement('div'); t.className='t'; t.textContent=(!WORK&&x.p==='중요'?'⭐ ':'')+x.t;
+  if (WORK && x.p==='중요') { const p=document.createElement('span'); p.className='pri'; p.textContent='중요'; t.appendChild(p); }
+  const m=document.createElement('div'); m.className='m';
+  if (!WORK) { const ch=document.createElement('span'); ch.className='chip'; const [bg,fg]=SOFT[catIdx(x.c)%5]; ch.style.background=bg; ch.style.color=fg; ch.textContent=x.c; m.appendChild(ch); }
+  else { const s=document.createElement('span'); s.textContent=x.c; m.appendChild(s); }
+  const w=whoTag(x); if (w) m.appendChild(w);
+  if (!WORK && x.d) { const s=document.createElement('span'); s.textContent = grp(x)==='over' ? fmtD(x.d)+'까지' : fmtD(x.d); if(grp(x)==='over') s.className='late'; m.appendChild(s); }
+  if (x.r) { const s=document.createElement('span'); s.textContent='⏰ '+x.r.replace('T',' ').slice(5); m.appendChild(s); }
+  if (x.m) { const s=document.createElement('span'); s.textContent=x.m.length>24?x.m.slice(0,24)+'…':x.m; m.appendChild(s); }
+  body.append(t,m); body.onclick=()=>openForm(x);
+  li.append(bar,c,body);
+  if (WORK) { const d=document.createElement('div'); d.className='d'+(grp(x)==='over'?' late':''); d.textContent=fmtD(x.d); li.appendChild(d); }
+  return li;
+}
 function render(){
+  renderHead(); renderTabs();
   const ul=$('list'); ul.innerHTML='';
-  const shown = items.filter(x=>x.s===(tab==='open'?'open':'done'));
-  if(!shown.length){ ul.innerHTML='<p class="empty">'+(tab==='open'?'할 일이 없어요 🎉':'최근 완료한 일이 없어요')+'</p>'; }
-  shown.forEach(x=>{
-    const li=document.createElement('li'); if(x.s==='done') li.classList.add('done'); if(ops.has(x.i)) li.classList.add('changed');
-    const c=document.createElement('button'); c.className='chk'; c.setAttribute('aria-label','완료');
-    c.onclick=()=>{ toggle(x); };
-    const body=document.createElement('div'); body.className='body';
-    const t=document.createElement('div'); t.className='t'; t.textContent=(x.p==='중요'?'⭐ ':'')+x.t;
-    const m=document.createElement('div'); m.className='meta';
-    m.textContent=[x.c, x.d?('~'+x.d):'', x.r?('⏰'+x.r.replace('T',' ').slice(5)):'' , x.m||''].filter(Boolean).join(' · ');
-    body.append(t,m); body.onclick=()=>openForm(x);
-    li.append(c,body); ul.appendChild(li);
-  });
+  let shown;
+  if (tab==='done') shown = items.filter(x=>x.s==='done');
+  else {
+    shown = items.filter(x=>x.s==='open');
+    if (!WORK) shown = shown.filter(x=> tab==='today' ? ['over','today'].includes(grp(x)) : grp(x)===tab);
+    else if (tab.startsWith('c:')) shown = shown.filter(x=>x.c===tab.slice(2));
+    else if (tab==='to'||tab==='from') shown = shown.filter(x=>x.a===tab && x.w);
+  }
+  if(!shown.length){ const p=document.createElement('p'); p.className='empty'; p.textContent = tab==='done'?'최근 완료한 일이 없어요':'할 일이 없어요 🎉'; ul.appendChild(p); }
+  const order=['over','today','week','later','done'];
+  order.forEach(g=>{ const part=shown.filter(x=>grp(x)===g); if(!part.length) return;
+    const h=document.createElement('div'); h.className='sec'; h.textContent=GN[g]; ul.appendChild(h);
+    part.sort((a,b)=>(a.d||'9')<(b.d||'9')?-1:1).forEach(x=>ul.appendChild(row(x))); });
   updateMain();
 }
 function toggle(x){
@@ -112,47 +232,54 @@ function toggle(x){
   render();
 }
 function openForm(x){
-  editing = x || null;
+  editing = x || null; $('fHead').textContent = x ? '할 일 고치기' : '할 일 추가';
   $('fTitle').value = x?x.t:''; $('fDue').value = x&&x.d?x.d:''; $('fRem').value = x&&x.r?x.r.slice(0,16):'';
   setPick($('fCat'), x?x.c:'기타'); setPick($('fPrio'), x?x.p:'보통'); $('fMemo').value = x&&x.m?x.m:'';
-  $('fDel').style.display = x?'':'none';
-  $('f').classList.add('show'); $('list').style.display='none'; $('add').style.display='none'; $('fTitle').focus();
+  const dir = x&&x.a&&x.w ? x.a : (tab==='to'||tab==='from' ? tab : ''); setPick($('fDir'), dir);
+  $('fWho').value = x&&x.w?x.w:''; $('fWho').classList.toggle('hide', !dir);
+  $('fDel').classList.toggle('hide', !x);
+  $('f').classList.add('show'); ['list','add','tabs'].forEach(i=>$(i).classList.add('hide')); document.querySelector('header').classList.add('hide');
+  if (tg) tg.MainButton.hide();
+  $('fTitle').focus();
 }
-function closeForm(){ $('f').classList.remove('show'); $('list').style.display=''; $('add').style.display=''; render(); }
+function closeForm(){ $('f').classList.remove('show'); ['list','add','tabs'].forEach(i=>$(i).classList.remove('hide')); document.querySelector('header').classList.remove('hide'); render(); }
+function say(t){ (tg&&tg.showAlert)?tg.showAlert(t):alert(t); }
 $('add').onclick=()=>openForm(null); $('fCancel').onclick=closeForm;
 $('fDel').onclick=()=>{ const x=editing; const i=items.indexOf(x); if(i>=0) items.splice(i,1);
   if (x.i.startsWith('new')) ops.delete(x.i); else ops.set(x.i,{op:'delete',id:x.i}); closeForm(); };
 $('fOk').onclick=()=>{
-  const v={t:$('fTitle').value.trim(), d:$('fDue').value||null, r:$('fRem').value||null, c:pick($('fCat'))||'기타', p:pick($('fPrio'))||'보통', m:$('fMemo').value.trim()||null};
-  if(!v.t){ (tg&&tg.showAlert)?tg.showAlert('할 일을 입력해 주세요.'):alert('할 일을 입력해 주세요.'); return; }
+  const v={t:$('fTitle').value.trim(), d:$('fDue').value||null, r:$('fRem').value||null, c:pick($('fCat'))||'기타', p:pick($('fPrio'))||'보통', m:$('fMemo').value.trim()||null, a:null, w:null};
+  if(!v.t){ say('할 일을 입력해 주세요.'); return; }
+  if (WORK) { const dir=pick($('fDir'))||''; const who=$('fWho').value.trim();
+    if (dir && !who) { say(dir==='to'?'누구에게 지시했는지 이름을 적어 주세요.':'누가 지시했는지 이름을 적어 주세요.'); return; }
+    if (dir) { v.a=dir; v.w=who; } }
   let x=editing;
   if(!x){ x={i:'new'+(++tmpN), s:'open'}; items.unshift(x); }
   Object.assign(x,v);
   const op={op:x.i.startsWith('new')?'add':'edit', id:x.i.startsWith('new')?undefined:x.i, title:v.t, due:v.d, remind:v.r, cat:v.c, prio:v.p, memo:v.m};
+  if (WORK) { op.adir=v.a; op.awho=v.w; }
   ops.set(x.i, op); closeForm();
 };
 function payload(){
-  const list=[...ops.entries()].map(([k,o])=>{ if(o.op==='add'){ const x=items.find(y=>y.i===k); if(x&&x.s==='done') return null; } return o; }).filter(Boolean);
-  // 새로 추가하고 바로 완료한 건은 보내지 않음
+  const list=[...ops.entries()].map(([k,o])=>{ if(o.op==='add'){ const x=items.find(y=>y.i===k); if(!x||x.s==='done') return null; } return o; }).filter(Boolean);
   return JSON.stringify({v:1, ops:list});
 }
 function updateMain(){
   if(!tg) return; const n=ops.size;
-  if(n){ tg.MainButton.setText('저장 ('+n+'건)'); tg.MainButton.show(); } else tg.MainButton.hide();
+  if(n){ tg.MainButton.setParams({text:'저장 ('+n+'건)', color: WORK?'#1f3a5f':'#7c5cff', text_color:'#ffffff'}); tg.MainButton.show(); } else tg.MainButton.hide();
 }
 let sending=false;
 if (tg) tg.MainButton.onClick(async ()=>{
-  const p = payload(); if (new TextEncoder().encode(p).length > 4000) { tg.showAlert('한 번에 바꾼 내용이 너무 많아요. 나눠서 저장해 주세요.'); return; }
+  const p = payload(); if (new TextEncoder().encode(p).length > 4000) { say('한 번에 바꾼 내용이 너무 많아요. 나눠서 저장해 주세요.'); return; }
   if (mode==='send') { tg.sendData(p); return; }
   if (sending) return; sending=true; tg.MainButton.showProgress();
   try {
     const r = await fetch(RELAY+'/api/submit?bot='+BOT, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({init: tg.initData, blob: p})});
     if (!r.ok) throw new Error(r.status);
     tg.MainButton.hideProgress(); tg.showAlert('저장했어요. 15초 안에 반영되고 방에 결과를 알려 드려요.', ()=>tg.close());
-  } catch(e) { sending=false; tg.MainButton.hideProgress(); tg.showAlert('저장하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.'); }
+  } catch(e) { sending=false; tg.MainButton.hideProgress(); say('저장하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.'); }
 });
-$('tOpen').onclick=()=>{tab='open';$('tOpen').classList.add('on');$('tDone').classList.remove('on');render();};
-$('tDone').onclick=()=>{tab='done';$('tDone').classList.add('on');$('tOpen').classList.remove('on');render();};
+window.__preview = { ops, payload };
 render();
 })();
 </script>
